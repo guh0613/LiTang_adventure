@@ -17,6 +17,8 @@ class Trigger(Enum):
     GET_LV = 11  # 计算等级时
     GET_CRIT = 12  # 计算暴击率时
     GET_CSD = 13  # 计算暴击伤害时
+    COUNTER = 14  # 反击
+    TURN_START = 15  # 回合开始时
 
 
 class DamageType(Enum):
@@ -31,7 +33,16 @@ class BuffTag(Enum):
 
 
 class BuffPriority(IntEnum):
+    ENVIRONMENT = 0  # 环境因子，发动非常早
     NORMAL = 1
+    CHANGE_ATK_FIRST = 0
     CHANGE_ATK_NORMAL = 1  # 修改攻击力，标准优先级
     CHANGE_ATK_LAST = 2  # 修改攻击力，最后优先级
     CHANGE_DAMAGE_LAST = 2  # 修改伤害，最后优先级
+    ABS_FINAL = 999  # 最后的最后才能运行，死亡判定专属优先级
+
+    # 响应扭曲效果结算
+    AVOID = 0  # 闪避最先结算
+
+    # 回合结束结算
+    TURN_END_LAST = 9

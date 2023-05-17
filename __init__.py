@@ -53,26 +53,28 @@ async def createlita(ev: GroupMessageEvent):
     if mgr.is_playing(gid):
         await createlt.finish("现在有人正在探索中！请等待他探索完毕。")
     else:
-        with mgr.start(gid, uid) as system:
-            system.choice = CHOICE_STARTGAME
+        with mgr.start(gid, uid) as game:
+            game.choice = CHOICE_STARTGAME
             await createlt.send(
                 f"欢迎你，勇敢的探索者{username}.理塘是一个神秘而危险的地方，你是否能够突破重重难关，到达传说中的世界最高峰呢？"
                 f"\n...准备好了吗？\n\na: 开始吧！\nb: 算了...")
             for i in range(60):  # 从等待到正式开始的循环等待
                 await asyncio.sleep(WAIT_TIME)
-                if system.status in (STATUS_FINISH, STATUS_END, STATUS_PREPARE):
+                if game.status in (STATUS_FINISH, STATUS_END, STATUS_READY):
                     break
 
-            if system.status in (STATUS_FINISH, STATUS_END, STATUS_PREPARE):
+            if game.status in (STATUS_FINISH, STATUS_END, STATUS_PREPARE):
                 await createlt.finish(
                     message_builder.at(uid) + '看起来你探索的意志不是特别坚定呢....没关系，Ophelia会一直在这里等待你的！')
             else:
                 while True:
                     await asyncio.sleep(WAIT_TIME)
-                    if system.status == STATUS_END or STATUS_WIN:
+                    if game.status in (STATUS_END, STATUS_WIN):
                         break
-                if system.status == STATUS_END:
-                    await createlt.send('真遗憾...下次再来探索吧！')
+                if game.status == STATUS_WIN:
+                    await createlt.finish('test complete')
+                if game.status == STATUS_END:
+                    await createlt.finish('真遗憾...下次再来探索吧！')
 
 
 @ltquery.handle()
@@ -88,7 +90,7 @@ async def litangquery(ev: GroupMessageEvent, arg: Message = CommandArg()):
             skill = SKILLS[no]
             msg = f"技能名称：{skill['name']}\n"
             msg += f"技能类别：{skill['class']}\n"
-            msg += f"技能效果：{skill['effect']}\n"
+            msg += f"技能效果：{skill['effect_text']}\n"
             msg += f"技能描述：{skill['des']}"
             await ltquery.finish(msg)
         else:
@@ -147,6 +149,9 @@ async def commandget(ev: GroupMessageEvent):
                 msg = '当前版本全技能列表：\n\n边境技能：\n'
                 for k, v in EDGESKILLS.items():
                     msg += f"{k} : {v['name']}\n"
+                msg += '\n丁真基础技能：\n'
+                for k, v in DINGZHEN_BASE_SKILLS.items():
+                    msg += f"{k} : {v['name']}\n"
                 msg += f"\n全技能共{len(SKILLS)}个\n(发送'技能详情 技能编号'来获得技能的具体信息)"
                 await commandgt.finish(msg)
             case 'b':
@@ -177,7 +182,7 @@ async def commandget(ev: GroupMessageEvent):
 
     if game.choice == CHOICE_FIRST_TIME:
         game.initplayer(uid)
-        player = game.getplayerobj()
+        player = game.role
         player.initdata()
 
         match choose:
@@ -207,11 +212,15 @@ async def commandget(ev: GroupMessageEvent):
             case 'a':
                 allblessnum = len(EDGEBLESSINGS)
                 result = random.choice(range(5001, 5001+allblessnum))
-                player = game.getplayerobj()
+                player = game.role
                 player.blessings.append(result)
                 await commandgt.send(f"你获得了雪豹祝福：{id2blessname(result)}！")
-                await commandgt.finish(
-                    'test complete')
+                await commandgt.send(f"正在进入理塘...")
+                player.skills.append(1001)
+                await asyncio.sleep(WAIT_TIME)
+                game.gamestart()
+                result_msg = game.choicemsgbuilder()
+                await commandgt.finish(result_msg)
             case 'b':
                 game.status = STATUS_FINISH
                 await commandgt.finish(

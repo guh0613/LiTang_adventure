@@ -21,6 +21,7 @@ class Buff:
         self._del_msg = None  # 删除标签时的提示
         self._checker: list[Callable[[MsgPack], bool]] = []  # 这里传入一个函数，函数为真值则继续执行
         self._priority = BuffPriority.NORMAL  # buff优先级，基本都是1
+        self.disable = False  # True时无法触发
 
         def default_handler(pack):
             self.logger.log(f"触发了{self._name}的默认行为")
@@ -53,6 +54,8 @@ class Buff:
         return self
 
     def check(self, pack: MsgPack) -> bool:
+        if self.disable:
+            return False
         pack.buff_name(self._name)
         pack.buff_owner(self._owner)
         for c in self._checker:
@@ -74,10 +77,12 @@ class Buff:
     def time_pass(self):
         self._time -= 1
 
-    def mark_as_delete(self, msg=None):
-        if msg:
-            self._del_msg = msg
+    def mark_as_delete(self) -> "Buff":
         self._time = -1
+        return self
+
+    def mark_as_disable(self):
+        self.disable = True
 
     def owner(self, owner) -> "Buff":
         self._owner = owner

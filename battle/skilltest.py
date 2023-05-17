@@ -1,13 +1,12 @@
 import unittest
 
-from ..gameBoard import GameBoard
-from ..logger import Logger
-from ..msgManager import MsgManager
-from ..pokemon import Pokemon
-from ..tools.tools import get_container
+from src.gameBoard import GameBoard
+from src.logger import Logger
+from src.msgManager import MsgManager
+from src.pokemon import Pokemon
+from src.tools.tools import get_container
 
 
-# 这个测试明明是单元测试不知为何放进项目里就跑不了了 气死我了
 class TestCases(unittest.TestCase):
     container = None
     logger = None
@@ -25,7 +24,7 @@ class TestCases(unittest.TestCase):
 
     def setUp(self) -> None:
         self.gameBoard = self.container[GameBoard]
-        self.gameBoard.TURN_LIMIT = 8
+        self.gameBoard.TURN_LIMIT =7
         self.pkm1 = self.container[Pokemon]
         self.pkm2 = self.container[Pokemon]
 
@@ -51,6 +50,7 @@ class TestCases(unittest.TestCase):
     def test发烟测试(self):
         self.pkm1.MAX_HP = 30
         self.pkm2.MAX_HP = 30
+        self.pkm1.is_upgraded_attack = True
         self.gameBoard.init()
         self.result = self.gameBoard.battle()
         self.assertEqual(self.pkm1.hp, 10)
@@ -74,18 +74,29 @@ class TestCases(unittest.TestCase):
         self.assertEqual(self.pkm2.hp, 1000)
 
     def test03(self):
+        self.pkm2.MAX_HP = 100
         self.pkm2.skillGroup = ["愈合1"]
         self.gameBoard.init()
         self.result = self.gameBoard.battle()
         self.assertEqual(self.pkm1.hp, 930)
-        self.assertEqual(self.pkm2.hp, 937)
+        self.assertEqual(self.pkm2.hp, 37)
 
     def test测试2个回血技能(self):
-        self.pkm2.skillGroup = ["愈合1", "长生"]
+        self.pkm2.MAX_HP = 100
+        self.pkm2.skillGroup = ["愈合1", "长生100"]
         self.gameBoard.init()
         self.result = self.gameBoard.battle()
         self.assertEqual(self.pkm1.hp, 930)
-        self.assertEqual(self.pkm2.hp, 944)
+        self.assertEqual(self.pkm2.hp, 44)
+
+    def test毒vs愈合(self):
+        self.pkm2.MAX_HP = 100
+        self.pkm2.skillGroup = ["愈合1", "长生100"]
+        self.pkm1.skillGroup = ["毒液50"]
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 930)
+        self.assertEqual(self.pkm2.hp, -2)
 
     def test毒攻击(self):
         self.pkm1.skillGroup = ["毒液50"]
@@ -114,7 +125,7 @@ class TestCases(unittest.TestCase):
         self.gameBoard.init()
         self.result = self.gameBoard.battle()
         self.assertEqual(self.pkm1.hp, 930)
-        self.assertEqual(self.pkm2.hp, 740)
+        self.assertEqual(self.pkm2.hp, 844)
 
     def test剧毒之体无法造成普通伤害(self):
         self.pkm1.skillGroup = ["剧毒之体"]
@@ -158,10 +169,10 @@ class TestCases(unittest.TestCase):
         self.pkm2.hp = 1
         self.result = self.gameBoard.battle()
         self.assertEqual(self.pkm1.hp, 1)
-        self.assertEqual(self.pkm2.hp, -208)
+        self.assertEqual(self.pkm2.hp, -1008)
 
-    def test诅咒(self):
-        self.pkm1.skillGroup = ["诅咒100"]
+    def test粘液(self):
+        self.pkm1.skillGroup = ["粘液100"]
         self.pkm2.skillGroup = ["利爪100"]
         self.gameBoard.init()
         self.result = self.gameBoard.battle()
@@ -185,12 +196,117 @@ class TestCases(unittest.TestCase):
         self.assertEqual(self.pkm2.hp, 720)
 
     def test尖牙(self):
-        self.pkm1.skillGroup = ["尖牙20"]
+        self.pkm1.skillGroup = ["尖牙100"]
         self.pkm2.skillGroup = []
         self.gameBoard.init()
         self.result = self.gameBoard.battle()
         self.assertEqual(self.pkm1.hp, 930)
         self.assertEqual(self.pkm2.hp, 860)
+
+    def test反击对反击不能触发无限反击(self):
+        self.pkm1.skillGroup = ["反击100"]
+        self.pkm2.skillGroup =["反击100"]
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 790)
+        self.assertEqual(self.pkm2.hp, 790)
+
+    def test两个人都有毒先手的人获胜(self):
+        self.pkm1.skillGroup = ["毒液10000"]
+        self.pkm2.skillGroup = ["毒液10000"]
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 1000)
+        self.assertEqual(self.pkm2.hp, -1000)
+
+    def test游泳测试1(self):
+        self.pkm1.skillGroup = ["溺水"]
+        self.pkm2.skillGroup = ["溺水"]
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 104)
+        self.assertEqual(self.pkm2.hp, 104)
+
+    def test免疫溺水(self):
+        self.pkm1.skillGroup = ["溺水","游泳5"]
+        self.pkm2.skillGroup = ["溺水"]
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 854)
+        self.assertEqual(self.pkm2.hp, 91)
+
+    def test平地游泳(self):
+        self.pkm1.skillGroup = ["游泳5"]
+        self.pkm2.skillGroup = []
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 930)
+        self.assertEqual(self.pkm2.hp, 930)
+
+    def test水栖免疫溺水(self):
+        self.pkm1.skillGroup = ["溺水","水栖"]
+        self.pkm2.skillGroup = ["溺水"]
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 944)
+        self.assertEqual(self.pkm2.hp, 90)
+
+    def test灵巧能闪避毒(self):
+        self.pkm1.skillGroup = ["灵巧100"]
+        self.pkm2.skillGroup = ["毒液50"]
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 1000)
+        self.assertEqual(self.pkm2.hp, 930)
+
+    def test粘液降低攻击的优先级(self):
+        self.pkm1.skillGroup = ["粘液50"]
+        self.pkm2.skillGroup = ["尖角100"]
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 650)
+        self.assertEqual(self.pkm2.hp, 930)
+
+    def test毒刃被剧毒之体加成(self):
+        self.pkm1.skillGroup = ["尖角90","毒刃40","剧毒之体"]
+        self.pkm2.skillGroup = ["尖角100"]
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 450)
+        self.assertEqual(self.pkm2.hp, -8)
+
+    def test剧毒之体无效伤害(self):
+        self.pkm1.skillGroup = ["尖角90","剧毒之体"]
+        self.pkm2.skillGroup = ["尖角100"]
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 230)
+        self.assertEqual(self.pkm2.hp, 1000)
+
+    def test威压测试(self):
+        self.pkm1.skillGroup = ["蛊神1","威压1"]
+        self.pkm2.skillGroup = []
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 951)
+        self.assertEqual(self.pkm2.hp,730)
+
+    def test伤噬测试(self):
+        self.pkm1.skillGroup = ["蛊神1","伤噬35","毒液100"]
+        self.pkm2.skillGroup = []
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 930)
+        self.assertEqual(self.pkm2.hp,558)
+
+
+    def test镜子(self):
+        self.pkm1.skillGroup = ["蛊神1","伤噬35","毒液100"]
+        self.pkm2.skillGroup = ["镜中自我"]
+        self.gameBoard.init()
+        self.result = self.gameBoard.battle()
+        self.assertEqual(self.pkm1.hp, 545)
+        self.assertEqual(self.pkm2.hp,559)
 
 if __name__ == '__main__':
     unittest.main()

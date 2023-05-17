@@ -1,6 +1,7 @@
 from .enums import Trigger, DamageType
 
 
+
 # 一坨getter和setter 用来保证不会写错变量名
 # 虽然写的很挫但是py没有lombok只能这样了
 class MsgPack:
@@ -111,7 +112,7 @@ class MsgPack:
         return self
 
     def get_damage(self) -> int:
-        return round(self.data["damage"],1)
+        return round(self.data["damage"])
 
     def change_damage(self, apply) -> None:
         self.data["damage"] = apply(self.get_damage())
@@ -119,7 +120,7 @@ class MsgPack:
     # 我方
     def our(self, our: "Pokemon") -> "MsgPack":
         self.data["our"] = our
-        self.data["name"] = our.name
+        self.data["name"] = our.name if our is not None else "无来源"
         return self
 
     def get_our(self) -> "Pokemon":
@@ -136,11 +137,11 @@ class MsgPack:
         self.data["enemy"] = enemy
         return self
 
-    def get_enemy(self):
+    def get_enemy(self) -> "Pokemon":
         return self.data["enemy"]
 
-    def is_enemy_owner(self) -> bool:
-        return self.data["enemy"] == self.data["buff_owner"]
+    # def is_enemy_owner(self) -> bool:
+    #     return self.data["enemy"] == self.data["buff_owner"]
 
     # buff名字（debug用）
     def buff_name(self, buff_name: str):
@@ -165,7 +166,7 @@ class MsgPack:
         self.data["pack"] = pack
         return self
 
-    def get_pack(self):
+    def get_pack(self) -> "MsgPack":
         return self.data["pack"]
 
     # buff拥有者(后续可能会取代我方)
@@ -210,6 +211,14 @@ class MsgPack:
 
     def check_damage_taken_trigger(self, tri: Trigger):
         return self.data["damage_taken_trigger"] == tri
+
+    # 回合开始计数
+    def turn_count(self, num:int) -> "MsgPack":
+        self.data["turn_count"] = num
+        return self
+
+    def get_turn_count(self) -> int:
+        return self.data["turn_count"]
 
     def __str__(self) -> str:
         return f"{self.data}"
@@ -261,6 +270,11 @@ class MsgPack:
     @staticmethod
     def turn_end_pack():
         return MsgPack.builder().trigger_type(Trigger.TURN_END)
+
+    @staticmethod
+    def turn_start_pack(num):
+        return MsgPack.builder().trigger_type(Trigger.TURN_START).turn_count(num)
+
 
     # @staticmethod
     # def be_atk_pack():
