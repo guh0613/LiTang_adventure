@@ -38,28 +38,33 @@ def choicemsgbuilder(self: System):
         return msg
 
 # 选择分支处理
-def choicehandler(self, choice):
+def choicehandler(self: System, choice):
+    result_msg = ""
     if self.pos == CIRCUM_ROOM:
         circum_dict = LEVELONE_CIRCUM_ROOMS.copy()
         circum_dict = circum_dict[self.roomid]
         match self.roomid:
             case 9001:
                 if choice == 'a':
-                    return "choose_a"
+
+                    result_msg = "choose_a"
                 if 'choice_b' in circum_dict and choice == 'b':
-                    return "choose_b"
+                    result_msg = "choose_b"
                 if 'choice_c' in circum_dict and choice == 'c':
-                    return "choose_c"
-                return RET_ERROR
+                    result_msg = "choose_c"
+
+        self.go_on()
+        return result_msg if result_msg != "" else RET_ERROR
+
 
 
     if self.pos == BATTLE_ROOM:
-        battle_dict = LEVELONE_BATTLE_ROOMS.copy()
-        battle_dict = battle_dict[self.roomid]
-        if choice == 'a':
-            self.choice = CHOICE_BATTLE
-            self.status = STATUS_BATTLE
-            return self.battlemsgbuilder()
-        if choice == 'b':
-            self.go_on()
-            return self.choicemsgbuilder()
+        # battle_dict = LEVELONE_BATTLE_ROOMS.copy()
+        # battle_dict = battle_dict[self.roomid]
+        # if choice == 'a':
+        #     self.choice = CHOICE_BATTLE
+        #     self.status = STATUS_BATTLE
+        #     return self.battlemsgbuilder()
+        # if choice == 'b':
+        #     self.go_on()
+        #     return self.choicemsgbuilder()

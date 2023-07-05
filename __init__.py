@@ -210,5 +210,8 @@ async def commandget(ev: GroupMessageEvent):
         if result == RET_ERROR:
             await commandgt.finish('你的选择有误，请重新输入！')
         else:
-            await commandgt.finish(result)
+            await commandgt.send(result)
+            await asyncio.sleep(WAIT_TIME)
+            newchoicemsg = game.GameMessangeBuilder()
+            await commandgt.finish(newchoicemsg)
 

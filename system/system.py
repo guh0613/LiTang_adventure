@@ -70,12 +70,17 @@ class System:
         self.level = 1
         self.go_on()
 
+    # 前往下一个房间
     def go_on(self):
+        # 选择分支状态切换为房间选择状态
         self.choice = CHOICE_ROOM
+        # level表示目前位于的层数
         match self.level:
             case 1:
+                # 若目前不位于顶层
                 if self.room < MAX_LEVEL1:
                     self.room += 1
+                    # 随机数决定进入房间类型
                     result = random.choice(range(1, 11))
                     if result <= 4:
                         self.pos = BATTLE_ROOM
@@ -84,10 +89,17 @@ class System:
                     else:
                         self.pos = CIRCUM_ROOM
                         self.roomid = random.choice(range(9001, 9001+len(LEVELONE_BATTLE_ROOMS)))
-                else:
+                # 若位于顶层
+                elif self.room == MAX_LEVEL1:
                     self.room += 1
                     self.pos = BOSS_ROOM
                     self.roomid = 10001
+                # 若已经通过boss房间
+                else:
+                    self.level += 1
+                    self.room = 0
+                    return self.go_on()
+
 
     def GameMessangeBuilder(self):
         return choicemsgbuilder(self)
