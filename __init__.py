@@ -1,39 +1,16 @@
-from typing import Dict, List
-import os
 import asyncio
-import math
-import random
-import re
 
 from nonebot.params import CommandArg
 
-from utils import message_builder
-from configs.path_config import IMAGE_PATH
-from nonebot.adapters.onebot.v11 import Message
-from nonebot import on_fullmatch, on_message, logger, on_command
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, GROUP_ADMIN, GROUP_OWNER
+from nonebot.adapters.onebot.v11 import Message,MessageSegment
+from nonebot import on_command
+from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
 
 from .utils.common_utils import *
-from .system import *
+from system.system import *
 from .items.skills import *
 from .items.blessings import *
 
-__zx_plugin_name__ = "理塘之旅"
-__plugin_usage__ = """
-usage：
-    开始一场探索理塘的冒险之旅......
-""".strip()
-__plugin_des__ = "开始一场探索理塘的冒险之旅......"
-__plugin_cmd__ = ["创建新探索"]
-__plugin_type__ = ("群内小游戏",)
-__plugin_version__ = 0.01
-__plugin_author__ = "Genisys"
-__plugin_settings__ = {
-    "level": 5,  # 群权限等级，请不要设置为1或999，若无特殊情况请设置为5
-    "default_status": True,  # 进群时的默认开关状态
-    "limit_superuser": False,  # 开关插件的限制是否限制超级用户
-    "cmd": ['创建新探索'],  # 命令别名，主要用于帮助和开关
-}
 
 mgr = Manager()
 IN_MUSEUM = []
@@ -65,7 +42,7 @@ async def createlita(ev: GroupMessageEvent):
 
             if game.status in (STATUS_FINISH, STATUS_END, STATUS_PREPARE):
                 await createlt.finish(
-                    message_builder.at(uid) + '看起来你探索的意志不是特别坚定呢....没关系，Ophelia会一直在这里等待你的！')
+                    MessageSegment.at(uid) + '看起来你探索的意志不是特别坚定呢....没关系，Ophelia会一直在这里等待你的！')
             else:
                 while True:
                     await asyncio.sleep(WAIT_TIME)
@@ -94,7 +71,7 @@ async def litangquery(ev: GroupMessageEvent, arg: Message = CommandArg()):
             msg += f"技能描述：{skill['des']}"
             await ltquery.finish(msg)
         else:
-            await ltquery.finish('Ophelia没有找到对应的技能信息......')
+            await ltquery.finish('没有找到对应的技能信息......')
     else:
         if no in BLESSINGS.keys():
             bless = BLESSINGS[no]
@@ -104,7 +81,7 @@ async def litangquery(ev: GroupMessageEvent, arg: Message = CommandArg()):
             msg += f"祝福描述：{bless['des']}"
             await ltquery.finish(msg)
         else:
-            await ltquery.finish('Ophelia没有找到对应的祝福信息......')
+            await ltquery.finish('没有找到对应的祝福信息......')
 
 
 @endgame.handle()
@@ -118,7 +95,7 @@ async def gameend(bot, ev: GroupMessageEvent):
         await endgame.finish('只有群管理或房主才能强制结束', at_sender=True)
 
     game.status = STATUS_END
-    await endgame.finish('请稍候...Ophelia正在收拾行李...')
+    await endgame.finish('请稍候...正在收拾行李...')
 
 
 @museum.handle()
@@ -163,7 +140,7 @@ async def commandget(ev: GroupMessageEvent):
                 await commandgt.finish(msg)
             case 'c':
                 IN_MUSEUM.remove(gid)
-                await commandgt.finish('没关系，Ophelia随时欢迎你来博物馆参观哦！')
+                await commandgt.finish('没关系，随时欢迎你来博物馆参观哦！')
             case _:
                 return
 
@@ -176,7 +153,7 @@ async def commandget(ev: GroupMessageEvent):
                     '那就让我们开始吧！在进入理塘探索之前，首先我们需要进行一些准备工作。请问这是你第一次探索吗？\n\na: 是的！\nb: 不是')
             case 'b':
                 game.status = STATUS_FINISH
-                await commandgt.finish('请稍候...Ophelia正在收拾行李...')
+                await commandgt.finish('请稍候...正在收拾行李...')
             case _:
                 return
 
@@ -219,12 +196,19 @@ async def commandget(ev: GroupMessageEvent):
                 player.skills.append(1001)
                 await asyncio.sleep(WAIT_TIME)
                 game.gamestart()
-                result_msg = game.choicemsgbuilder()
+                result_msg = game.game_MessangeBuilder()
                 await commandgt.finish(result_msg)
             case 'b':
                 game.status = STATUS_FINISH
                 await commandgt.finish(
-                    message_builder.at(uid) + '看起来你探索的意志不是特别坚定呢....没关系，Ophelia会一直在这里等待你的！')
+                    MessageSegment.at(uid) + '看起来你探索的意志不是特别坚定呢....没关系，Ophelia会一直在这里等待你的！')
             case _:
                 return
+
+    if game.choice == CHOICE_ROOM:
+        result = game.GameChoiceHandler(choose)
+        if result == RET_ERROR:
+            await commandgt.finish('你的选择有误，请重新输入！')
+        else:
+            await commandgt.finish(result)
 

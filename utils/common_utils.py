@@ -1,5 +1,5 @@
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
-from ..system import Attr
+from system.system import Attr
 from ..items.skills import SKILLS
 from ..items.blessings import BLESSINGS
 
