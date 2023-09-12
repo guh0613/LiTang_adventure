@@ -7,10 +7,11 @@ from nonebot import on_command
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
 
 from .utils.common_utils import *
-from system.system import *
+from .system.system import *
 from .items.skills import *
 from .items.blessings import *
 
+__plugin_version__ = '1.0.0'
 
 mgr = Manager()
 IN_MUSEUM = []
@@ -196,7 +197,7 @@ async def commandget(ev: GroupMessageEvent):
                 player.skills.append(1001)
                 await asyncio.sleep(WAIT_TIME)
                 game.gamestart()
-                result_msg = game.game_MessangeBuilder()
+                result_msg = game.gamemessangebuilder()
                 await commandgt.finish(result_msg)
             case 'b':
                 game.status = STATUS_FINISH
@@ -206,12 +207,12 @@ async def commandget(ev: GroupMessageEvent):
                 return
 
     if game.choice == CHOICE_ROOM:
-        result = game.GameChoiceHandler(choose)
+        result = game.gamechoicehandler(choose)
         if result == RET_ERROR:
             await commandgt.finish('你的选择有误，请重新输入！')
         else:
             await commandgt.send(result)
             await asyncio.sleep(WAIT_TIME)
-            newchoicemsg = game.GameMessangeBuilder()
+            newchoicemsg = game.gamemessangebuilder()
             await commandgt.finish(newchoicemsg)
 

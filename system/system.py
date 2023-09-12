@@ -2,37 +2,9 @@ import random
 from typing import List
 from .role import Role
 from .room_handler import *
+from .status import *
 
 WAIT_TIME = 3
-
-BATTLE_ROOM = 'battle_room'
-CIRCUM_ROOM = 'circum_room'
-BOSS_ROOM = 'boss_room'
-
-# 游戏状态常量
-STATUS_READY = "ready"
-STATUS_PREPARE = "prepare"
-STATUS_START = "start"
-STATUS_FINISH = "finish"
-STATUS_END = 'end'
-STATUS_WIN = 'win'
-
-# 游戏选择状态常量
-CHOICE_STARTGAME = "c_startgame"
-CHOICE_FIRST_TIME = "c_firsttime"
-CHOICE_START = "c_start"
-CHOICE_ROOM = "c_room"
-
-# 状态常量
-RET_SUCCESS = 0
-RET_ERROR = -1
-
-
-MAX_LEVEL1 = 5
-
-
-
-
 
 
 class System:
@@ -62,7 +34,6 @@ class System:
     def getplayerobj(self) -> Role:
         return self.role
 
-
     def gamestart(self):
         self.status = STATUS_START
         player = self.role
@@ -84,11 +55,11 @@ class System:
                     result = random.choice(range(1, 11))
                     if result <= 4:
                         self.pos = BATTLE_ROOM
-                        self.roomid = random.choice(range(9101, 9101+len(LEVELONE_CIRCUM_ROOMS)))
+                        self.roomid = random.choice(range(9101, 9101 + len(LEVELONE_CIRCUM_ROOMS)))
 
                     else:
                         self.pos = CIRCUM_ROOM
-                        self.roomid = random.choice(range(9001, 9001+len(LEVELONE_BATTLE_ROOMS)))
+                        self.roomid = random.choice(range(9001, 9001 + len(LEVELONE_BATTLE_ROOMS)))
                 # 若位于顶层
                 elif self.room == MAX_LEVEL1:
                     self.room += 1
@@ -100,20 +71,11 @@ class System:
                     self.room = 0
                     return self.go_on()
 
-
-    def GameMessangeBuilder(self):
+    def gamemessangebuilder(self):
         return choicemsgbuilder(self)
 
-    def GameChoiceHandler(self, choice):
+    def gamechoicehandler(self, choice):
         return choicehandler(self, choice)
-
-
-
-
-
-
-
-
 
 
 # 管理器

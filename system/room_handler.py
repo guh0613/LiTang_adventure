@@ -1,11 +1,10 @@
-from items.rooms import *
-from system.system import CIRCUM_ROOM, RET_ERROR, BATTLE_ROOM, BOSS_ROOM
-from .system import System
-from items.boss_rooms import *
+from ..items.rooms import *
+from .status import CIRCUM_ROOM, RET_ERROR, BATTLE_ROOM, BOSS_ROOM
+from ..items.boss_rooms import *
 
 
 # 选择分支文本生成
-def choicemsgbuilder(self: System):
+def choicemsgbuilder(self):
     msg = f"第{self.level}层\t{LEVEL[self.level]}\n事件{self.room}\n"
     if self.pos == CIRCUM_ROOM:
         circum_dict = LEVELONE_CIRCUM_ROOMS.copy()
@@ -37,8 +36,9 @@ def choicemsgbuilder(self: System):
         msg += f"\n(b) 放弃"
         return msg
 
+
 # 选择分支处理
-def choicehandler(self: System, choice):
+def choicehandler(self, choice):
     result_msg = ""
     if self.pos == CIRCUM_ROOM:
         circum_dict = LEVELONE_CIRCUM_ROOMS.copy()
@@ -46,7 +46,6 @@ def choicehandler(self: System, choice):
         match self.roomid:
             case 9001:
                 if choice == 'a':
-
                     result_msg = "choose_a"
                 if 'choice_b' in circum_dict and choice == 'b':
                     result_msg = "choose_b"
@@ -56,9 +55,8 @@ def choicehandler(self: System, choice):
         self.go_on()
         return result_msg if result_msg != "" else RET_ERROR
 
-
-
     if self.pos == BATTLE_ROOM:
+        pass
         # battle_dict = LEVELONE_BATTLE_ROOMS.copy()
         # battle_dict = battle_dict[self.roomid]
         # if choice == 'a':

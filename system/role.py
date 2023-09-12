@@ -1,12 +1,12 @@
 import math
 from typing import List
 from .attrs import Attr, MAX_CRIT
-from .system import System, STATUS_END
+from .status import STATUS_END
 
 
 class Role:
-    def __init__(self, s: System, uid):
-        self.game: System = s
+    def __init__(self, s, uid):
+        self.game = s
         self.attr = {}
         self.uid = uid
         self.skills: List[int] = []
