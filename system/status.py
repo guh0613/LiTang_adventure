@@ -11,6 +11,8 @@ STATUS_END = 'end'
 STATUS_WIN = 'win'
 
 # 游戏选择状态常量
+
+# 常规选择
 CHOICE_STARTGAME = "c_startgame"
 CHOICE_FIRST_TIME = "c_firsttime"
 CHOICE_START = "c_start"

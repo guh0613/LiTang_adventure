@@ -19,6 +19,7 @@ class System:
         self.choice = None
         self.status = STATUS_PREPARE
         self.role: Role = None
+        self.has_travel: List = []
 
     def __enter__(self):
         self.mgr.playing[self.gid] = self
@@ -55,11 +56,18 @@ class System:
                     result = random.choice(range(1, 11))
                     if result <= 4:
                         self.pos = BATTLE_ROOM
-                        self.roomid = random.choice(range(9101, 9101 + len(LEVELONE_CIRCUM_ROOMS)))
-
+                        roomid = random.choice(range(9101, 9101 + len(LEVELONE_CIRCUM_ROOMS)))
+                        while roomid in self.has_travel:
+                            roomid = random.choice(range(9101, 9101 + len(LEVELONE_CIRCUM_ROOMS)))
+                        self.roomid = roomid
+                        self.has_travel.append(roomid)
                     else:
                         self.pos = CIRCUM_ROOM
-                        self.roomid = random.choice(range(9001, 9001 + len(LEVELONE_BATTLE_ROOMS)))
+                        roomid = random.choice(range(9001, 9001 + len(LEVELONE_BATTLE_ROOMS)))
+                        while roomid in self.has_travel:
+                            roomid = random.choice(range(9001, 9001 + len(LEVELONE_CIRCUM_ROOMS)))
+                        self.roomid = roomid
+                        self.has_travel.append(roomid)
                 # 若位于顶层
                 elif self.room == MAX_LEVEL1:
                     self.room += 1

@@ -1,10 +1,13 @@
 import asyncio
 
+from nonebot.matcher import Matcher
 from nonebot.params import CommandArg
 
 from nonebot.adapters.onebot.v11 import Message,MessageSegment
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
+
+from .system.choice_display import choicedisplayer
 
 from .utils.common_utils import *
 from .system.system import *
@@ -21,6 +24,7 @@ commandgt = on_command('a', aliases={'b', 'c'}, priority=5)
 endgame = on_command('结束探索', priority=5, block=True)
 museum = on_command('理塘博物馆', priority=5, block=True)
 ltquery = on_command('技能详情', aliases={'祝福详情'}, priority=5, block=True)
+check = on_command('探索状态', priority=5, block=True)
 
 
 @createlt.handle()
@@ -43,7 +47,7 @@ async def createlita(ev: GroupMessageEvent):
 
             if game.status in (STATUS_FINISH, STATUS_END, STATUS_PREPARE):
                 await createlt.finish(
-                    MessageSegment.at(uid) + '看起来你探索的意志不是特别坚定呢....没关系，Ophelia会一直在这里等待你的！')
+                    MessageSegment.at(uid) + '看起来你探索的意志不是特别坚定呢....没关系，我会一直在这里等待你的！')
             else:
                 while True:
                     await asyncio.sleep(WAIT_TIME)
@@ -112,7 +116,7 @@ async def ltmuseum(ev: GroupMessageEvent):
 
 # 游戏内选择分支的统一处理
 @commandgt.handle()
-async def commandget(ev: GroupMessageEvent):
+async def commandget(matcher: Matcher, ev: GroupMessageEvent):
     choose = ev.get_plaintext()
     gid, uid = ev.group_id, ev.user_id
     game = mgr.get_game(gid)
@@ -145,74 +149,27 @@ async def commandget(ev: GroupMessageEvent):
             case _:
                 return
 
-    if game.choice == CHOICE_STARTGAME:
-        match choose:
-            case 'a':
-                game.status = STATUS_READY
-                game.choice = CHOICE_FIRST_TIME
-                await commandgt.finish(
-                    '那就让我们开始吧！在进入理塘探索之前，首先我们需要进行一些准备工作。请问这是你第一次探索吗？\n\na: 是的！\nb: 不是')
-            case 'b':
-                game.status = STATUS_FINISH
-                await commandgt.finish('请稍候...正在收拾行李...')
-            case _:
-                return
+    await choicedisplayer(game, ev, matcher)
 
-    if game.choice == CHOICE_FIRST_TIME:
-        game.initplayer(uid)
+@check.handle()
+async def checkprop(bot, ev: GroupMessageEvent):
+    gid = ev.group_id
+    game = mgr.get_game(gid)
+    if not game or game.role is None:
+        return
+    else:
         player = game.role
-        player.initdata()
-
-        match choose:
-            case 'a':
-                game.choice = CHOICE_FIRST_TIME
-                await commandgt.send(
-                    '嗯哼，是新面孔呢。那就让我来给你讲一讲吧！理塘是一座神秘的古代山峰，在这里，到处都是奇珍异宝...更不用说还有各种神秘现象！据说，这是理塘的守护神“丁真”的魔力造成的。')
-                await asyncio.sleep(WAIT_TIME)
-                await commandgt.send('有点扯远啦，虽说理塘到处都是宝藏，但在这里，危险也与我们相伴而行。所幸的是，丁真的力量能够成为我们的助力！'
-                                     "\n首先是'技能'！技能是每一个理塘生物都拥有的能力，他们在战斗时会发挥作用！作为探索者，技能是我们驱散危险的重要工具。"
-                                     "\n然后是'雪豹祝福'！祝福是由丁真直接赋予的一种赐福，能够在探索的途中产生各种有益的效果。"
-                                     "\n还有诅....啊好了就先不说这么多了！")
-                await asyncio.sleep(WAIT_TIME)
-                game.choice = CHOICE_START
-                await commandgt.finish(
-                    "在每一次探索开始前，你都有机会从3个选项中选择一个，作为你的起始装备！\n现在就来选择吧！\n"
-                    "\na: 获得一个随机边境祝福\nb: 升级'普通攻击'技能\nc: 角色的生命值上限、攻击力、防御力各增加10")
-            case 'b':
-                game.choice = CHOICE_START
-                await commandgt.finish("好的，那么现在是常规的起始装备选择时间！\n"
-                                       "\na: 获得一个随机边境祝福\nb: 升级'普通攻击'技能\nc: 角色的生命值上限、攻击力、防御力各增加10")
-            case _:
-                return
-
-    if game.choice == CHOICE_START:
-        match choose:
-            case 'a':
-                allblessnum = len(EDGEBLESSINGS)
-                result = random.choice(range(5001, 5001+allblessnum))
-                player = game.role
-                player.blessings.append(result)
-                await commandgt.send(f"你获得了雪豹祝福：{id2blessname(result)}！")
-                await commandgt.send(f"正在进入理塘...")
-                player.skills.append(1001)
-                await asyncio.sleep(WAIT_TIME)
-                game.gamestart()
-                result_msg = game.gamemessangebuilder()
-                await commandgt.finish(result_msg)
-            case 'b':
-                game.status = STATUS_FINISH
-                await commandgt.finish(
-                    MessageSegment.at(uid) + '看起来你探索的意志不是特别坚定呢....没关系，Ophelia会一直在这里等待你的！')
-            case _:
-                return
-
-    if game.choice == CHOICE_ROOM:
-        result = game.gamechoicehandler(choose)
-        if result == RET_ERROR:
-            await commandgt.finish('你的选择有误，请重新输入！')
+        msg = f"当前生命值：{player.attr[Attr.NOW_HEALTH]}/{player.attr[Attr.MAX_HEALTH]}\n"
+        msg += f"当前攻击力：{player.attr[Attr.ATTACK]}\n"
+        msg += f"当前防御力：{player.attr[Attr.DEFENSIVE]}\n\n"
+        msg += f"当前技能：\n"
+        for skill, skilllevel in player.skills.items():
+            msg += f"{id2skillname(skill)} (等级{skilllevel})\n"
+        msg += f"\n当前雪豹祝福：\n"
+        if len(player.blessings) == 0:
+            msg += "无"
         else:
-            await commandgt.send(result)
-            await asyncio.sleep(WAIT_TIME)
-            newchoicemsg = game.gamemessangebuilder()
-            await commandgt.finish(newchoicemsg)
+            for bless in player.blessings:
+                msg += f"{id2blessname(bless)}: {getblesseffect(bless)}\n"
+        await check.finish(msg)
 

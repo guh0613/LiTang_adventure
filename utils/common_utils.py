@@ -30,6 +30,10 @@ def AttrTextChange(attr_type):
 def id2skillname(skid: int):
     return SKILLS[skid]['name']
 
+
 def id2blessname(blid: int):
     return BLESSINGS[blid]['name']
 
+
+def getblesseffect(blid: int):
+    return BLESSINGS[blid]['effect_text']

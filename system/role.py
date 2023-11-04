@@ -1,5 +1,5 @@
 import math
-from typing import List
+from typing import List, Dict
 from .attrs import Attr, MAX_CRIT
 from .status import STATUS_END
 
@@ -9,7 +9,7 @@ class Role:
         self.game = s
         self.attr = {}
         self.uid = uid
-        self.skills: List[int] = []
+        self.skills: Dict = {}
         self.blessings = []
 
     def initdata(self):
@@ -21,7 +21,7 @@ class Role:
         self.attr[Attr.DEFENSIVE] = 10
         self.attr[Attr.CRIT] = 10
         self.attr[Attr.CRIT_HURT] = 2
-        self.skills.append(1001)
+        self.skills[1001] = 1
 
     def attrChange(self, attr_type, num):
 
